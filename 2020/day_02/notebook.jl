@@ -53,7 +53,7 @@ md"""
 const input = CSV.read(
 	"input.txt",
 	DataFrame; datarow=1,
-	header = [:char_count_lims, :char_str, :passwd]
+	header = [:rule_str, :char_str, :passwd]
 )
 
 # ╔═╡ a6fbc452-4e49-11eb-34a6-79f5622f7736
@@ -66,36 +66,58 @@ md"""
 #### Implementation
 """
 
+# ╔═╡ 0a3abc22-4e3d-11eb-2d99-3d12d8f667d6
+md"""
+We can just do this row by row, using each token to build/test our rule and count the final results of those that passed:
+"""
+
+# ╔═╡ 667a6ad8-4ef5-11eb-23dd-ab68ef2c9eff
+# Returns total number of passwords from `input` that satisfy `rule`
+function check_passwords(input, rule)
+	return sum(rule(row...) for row in eachrow(input))
+end
+
 # ╔═╡ 3ed4dcba-4e3d-11eb-212d-55e48a789921
 md"""
 ##### Part One
 """
 
-# ╔═╡ 0a3abc22-4e3d-11eb-2d99-3d12d8f667d6
-md"""
-We can just do this row by row, using each token to build/test our rule:
-"""
-
 # ╔═╡ 390d403c-4ef2-11eb-1c53-8533ada4f8d8
-# Checks if the occurence of the given character is within the given range
-function check_passwd(char_count_lims, char_str, passwd)
-	char_count_du = parse.(Int, split(char_count_lims, '-'))
+# Returns `true` if the occurence of the given character is within the given range
+function rule_part1(rule_str, char_str, passwd)
+	char_count_du = parse.(Int, split(rule_str, '-'))
 	char = split(char_str, ":")[1]
 	return count(char, passwd) ∈ UnitRange(char_count_du...)
 end
 
-# ╔═╡ 667a6ad8-4ef5-11eb-23dd-ab68ef2c9eff
-function part1(input)
-	return sum(check_passwd(row...) for row in eachrow(input))
-end
-
 # ╔═╡ e99531a6-4ef9-11eb-1abc-5f747b0d6437
-part1(input)
+check_passwords(input, rule_part1)
 
 # ╔═╡ ecafeac2-4e3e-11eb-1531-a70f0b895e8c
 md"""
 ##### Part Two
 """
+
+# ╔═╡ 630740d0-4f02-11eb-29af-9580e06bdec1
+md"""
+The new rule can be called from `check_passwords` as well:
+"""
+
+# ╔═╡ 44e2483e-4f02-11eb-2fb8-13c0774d7ecb
+md"""
+Credit to [@Colin Caine](https://julialang.zulipchat.com/#narrow/stream/265470-advent-of-code-%282020%29/topic/Solutions.20day.202/near/218519027) for char trick
+"""
+
+# ╔═╡ d94312e6-4efe-11eb-1b93-59cc0dce4503
+# Returns `true` if character exclusively exists in given 1-based index
+function rule_part2(rule_str, char_str, passwd)
+	char_idx1, char_idx2 = parse.(Int, split(rule_str, '-'))
+	(char,) = split(char_str, ":")[1]
+	return (passwd[char_idx1] == char) ⊻ (passwd[char_idx2] == char)
+end
+
+# ╔═╡ a921cba6-4eff-11eb-169b-8b3054bb6834
+check_passwords(input, rule_part2)
 
 # ╔═╡ Cell order:
 # ╟─a103d4dc-4e3c-11eb-1fd3-4f98e9c844d1
@@ -105,10 +127,14 @@ md"""
 # ╠═f9bd0f50-4e3a-11eb-2880-9109dbeffc24
 # ╟─a6fbc452-4e49-11eb-34a6-79f5622f7736
 # ╟─7f24ae86-4e3c-11eb-1a16-9b7b1f92669d
-# ╟─3ed4dcba-4e3d-11eb-212d-55e48a789921
 # ╟─0a3abc22-4e3d-11eb-2d99-3d12d8f667d6
-# ╠═390d403c-4ef2-11eb-1c53-8533ada4f8d8
 # ╠═667a6ad8-4ef5-11eb-23dd-ab68ef2c9eff
+# ╟─3ed4dcba-4e3d-11eb-212d-55e48a789921
+# ╠═390d403c-4ef2-11eb-1c53-8533ada4f8d8
 # ╠═e99531a6-4ef9-11eb-1abc-5f747b0d6437
 # ╟─ecafeac2-4e3e-11eb-1531-a70f0b895e8c
+# ╟─630740d0-4f02-11eb-29af-9580e06bdec1
+# ╟─44e2483e-4f02-11eb-2fb8-13c0774d7ecb
+# ╠═d94312e6-4efe-11eb-1b93-59cc0dce4503
+# ╠═a921cba6-4eff-11eb-169b-8b3054bb6834
 # ╠═31de7d6c-4dc1-11eb-1590-19a9c961ddb6
